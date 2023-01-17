@@ -80,10 +80,10 @@ export default component$(() => {
 
             // Readable streams emit 'data' events once a listener is added.
             reader.on("data", (chunk) => {
-              chunk = String(chunk).replace(
-                'q:base="/build/"',
-                `q:base="/container/build/header/"`
-              );
+              // chunk = String(chunk).replace(
+              //   'q:base="/build/"',
+              //   `q:base="/container/build/header/"`
+              // );
               stream.write(chunk);
             });
 
