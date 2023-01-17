@@ -8,6 +8,7 @@ import {
 import ComponentA from '~/components/component-a';
 import ComponentB from '~/components/component-b';
 import ComponentC from '~/components/component-c';
+import { Readable } from "stream";
 
 export default component$(() => {
   const tree = useStore(
@@ -44,7 +45,7 @@ export default component$(() => {
     const service = 'filter';
 
     const response = await fetch(
-      'https://cloud-gallery-filter.web-experiments.workers.dev/'
+      'https://qwik-multi-worker-header.devdash.workers.dev'
     );
     if (response.body === null) {
       throw new Error(`Response from "${fragmentName}" request is null.`);
@@ -72,14 +73,23 @@ export default component$(() => {
         </div>
 
         <SSRStream>
-          {async (streamWriter: any) => {
-            const fragment = await fetchFragment();
-            const reader = fragment.getReader();
-            let fragmentChunk = await reader.read();
-            while (!fragmentChunk.done) {
-              streamWriter.write(decoder.decode(fragmentChunk.value));
-              fragmentChunk = await reader.read();
-            }
+          {async (stream) => {
+            const res = await fetch('https://qwik-multi-worker-header.devdash.workers.dev');
+            const reader = res.body as any as Readable;
+            reader.setEncoding("utf8");
+
+            // Readable streams emit 'data' events once a listener is added.
+            reader.on("data", (chunk) => {
+              chunk = String(chunk).replace(
+                'q:base="/build/"',
+                `q:base="/container/build/header/"`
+              );
+              stream.write(chunk);
+            });
+
+            return new Promise((resolve) => {
+              reader.on("end", () => resolve());
+            });
           }}
         </SSRStream>
 
